@@ -1,6 +1,8 @@
 # ble_beacon
-STEM workshop reading bluetooth beacons
+## STEM workshop reading bluetooth beacons
 
 
-Install Bluez
+### Install bluetooth software
+```
 sudo apt-get install bluetooth bluez-utils blueman bluez-hcidump
+```
