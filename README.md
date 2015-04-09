@@ -34,5 +34,9 @@ BlueZ 5 [API](http://www.bluez.org/bluez-5-api-introduction-and-porting-guide/)
 ### This looks useful:
 [iBeacon Raspberry Pi Scanner in Python](http://www.switchdoc.com/2014/08/ibeacon-raspberry-pi-scanner-python/)
 
-Modification to test ZED editor on ChromeOS
+### Open Beacon Specs:
+[AltBeacon Protocol Specification v1.0](https://github.com/AltBeacon/spec)
+
+[UriBeacon Specification](https://github.com/google/uribeacon/tree/master/specification)
+
 
