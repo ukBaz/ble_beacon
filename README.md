@@ -32,11 +32,15 @@ BlueZ 5 [API](http://www.bluez.org/bluez-5-api-introduction-and-porting-guide/)
 [BlueZ/test](https://github.com/aguedes/bluez/tree/master/test)
 
 ### This looks useful:
-[iBeacon Raspberry Pi Scanner in Python](http://www.switchdoc.com/2014/08/ibeacon-raspberry-pi-scanner-python/)
 
 ### Open Beacon Specs:
 [AltBeacon Protocol Specification v1.0](https://github.com/AltBeacon/spec)
 
 [UriBeacon Specification](https://github.com/google/uribeacon/tree/master/specification)
+
+### Articles
+[Beacon tracking with Node.js and Raspberry Pi](https://medium.com/@eklimcz/beacon-tracking-with-node-js-and-raspberry-pi-794afa880318)
+
+[iBeacon Raspberry Pi Scanner in Python](http://www.switchdoc.com/2014/08/ibeacon-raspberry-pi-scanner-python/)
 
 
