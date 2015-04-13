@@ -31,6 +31,12 @@ It seems like this is important:
 ```
 sudo apt-get install python-bluez
 ```
+# Physical Web examples
+To run the Linux example using Bluez then a newer version of awk needs to be installed. This can be done with:
+
+```
+sudo apt-get install gawk
+```
 # Useful references:
 
 [ubuntu documentation](https://help.ubuntu.com/community/BluetoothSetup)
