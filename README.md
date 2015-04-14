@@ -59,3 +59,5 @@ BlueZ 5 [API](http://www.bluez.org/bluez-5-api-introduction-and-porting-guide/)
 [iBeacon Raspberry Pi Scanner in Python](http://www.switchdoc.com/2014/08/ibeacon-raspberry-pi-scanner-python/)
 
 [iBeacons™ aren’t the only Fruit!](http://devblog.blackberry.com/2014/09/ibeacons-not-the-only-fruit/)
+
+[Beacon introduction](http://www.slideshare.net/Dusan_Writer/ibeacon-and-bluetooth-le-an-introduction)
