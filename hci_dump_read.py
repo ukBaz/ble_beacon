@@ -32,6 +32,8 @@ RSSI: A7 (deciaml -89)
 
 import re
 import subprocess
+import math
+import numpy as np
 
         
 def mac_address(bytes):
@@ -112,6 +114,34 @@ def has_uribeacon_service(data):
             data[19] == 'D8' and
             data[20] == 'FE')
 
+ 
+def holt_winters_second_order_ewma( x, span, beta ):
+    """
+    http://connor-johnson.com/2014/02/01/smoothing-with-exponentially-weighted-moving-averages/
+    """
+    N = x.size
+    alpha = 2.0 / ( 1 + span )
+    s = np.zeros(( N, ))
+    b = np.zeros(( N, ))
+    s[0] = x[0]
+    for i in range( 1, N ):
+        s[i] = alpha * x[i] + ( 1 - alpha )*( s[i-1] + b[i-1] )
+        b[i] = beta * ( s[i] - s[i-1] ) + ( 1 - beta ) * b[i-1]
+    return s
+ 
+def calc_distance(rssi, tx_value):
+    # Power value. Usually ranges between -59 to -65
+    # tx_value = -69
+    if rssi == 0:
+        return -1.0
+    
+    ratio = rssi*1.0/tx_value
+    if ratio < 1.0:
+        return round(math.pow(ratio,10), 2)
+    else:
+        distance =  (0.89976)*math.pow(ratio,7.7095) + 0.111
+        return round(distance, 2)
+
 gotOK = False
 cmd = './hcidump.sh'
 print cmd
@@ -141,4 +171,8 @@ while not gotOK:
             print 'RSSI: {}'.format(rssi_value(mydata))
             print 'Address: {}'.format(mac_address(mydata))
             print 'Length: {}'.format(ad_length(mydata))
-            print 'uri: {}{}'.format(uri_scheme(mydata), encoded_uri(mydata, ad_length(mydata)))
+            print 'uri: {}{}'.format(uri_scheme(mydata),
+                                     encoded_uri(mydata, ad_length(mydata)))
+            print 'distance: {}'.format(calc_distance(rssi_value(mydata),
+                                                      tx_power(mydata)))
+            
