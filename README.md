@@ -61,3 +61,4 @@ BlueZ 5 [API](http://www.bluez.org/bluez-5-api-introduction-and-porting-guide/)
 [iBeacons™ aren’t the only Fruit!](http://devblog.blackberry.com/2014/09/ibeacons-not-the-only-fruit/)
 
 [Beacon introduction](http://www.slideshare.net/Dusan_Writer/ibeacon-and-bluetooth-le-an-introduction)
+[Coffee with a Googler: Chat with Scott Jenson about the Physical Web](https://www.youtube.com/watch?v=w8zkLGwzP_4)
