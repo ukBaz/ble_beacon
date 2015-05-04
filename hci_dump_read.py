@@ -53,7 +53,7 @@ def service_id(data):
 
 def ad_length(data):
     # Between 5 - 23
-    return int(data[21], 16)
+    return int(data[18], 16)
 
 def service_data(data):
     # 0x16
@@ -71,7 +71,7 @@ def uri_flags(data):
 
 def tx_power(data):
     # Reference power from beacon broadcast
-    tx_power = int(data[26], 16)
+    tx_power = int(data[23], 16)
     if tx_power & 0x80: # MSB set -> neg.
         return -((~tx_power & 0xff) + 1)
     else:
@@ -89,14 +89,49 @@ def uri_scheme(data):
                      2: 'http://',
                      3: 'https://',
                      4: 'urn:uuid:'}
-    return encode_scheme[int(data[27])]
+    return encode_scheme[int(data[24])]
+
+def url_encoding(code):
+    # UriBeacon HTTP URL encoding
+    # 0	0x00	.com/
+    # 1	0x01	.org/
+    # 2	0x02	.edu/
+    # 3	0x03	.net/
+    # 4	0x04	.info/
+    # 5	0x05	.biz/
+    # 6	0x06	.gov/
+    # 7	0x07	.com
+    # 8	0x08	.org
+    # 9	0x09	.edu
+    # 10	0x0a	.net
+    # 11	0x0b	.info
+    # 12	0x0c	.biz
+    # 13	0x0d	.gov
+    encode_scheme = {0: '.com/',
+                     1: '.org/',
+                     2: '.edu/',
+                     3: '.net/',
+                     4: '.info/',
+                     5: '.biz/',
+                     6: '.gov/',
+                     7: '.com',
+                     8: '.org',
+                     9: '.edu',
+                     10: '.net',
+                     11: '.info',
+                     12: '.biz',
+                     13: '.gov'}
+    return encode_scheme[int(code)]
 
 def encoded_uri(data, length):
     # Uri content
     val = ''
-    for i in data[28:(22 + length)]:
+    for i in data[25:(25 + length - 6)]:
         # print 'Encode: {0} - {1}'.format(i, chr(int(i, 16)))
-        val = val + chr(int(i, 16))
+        if int(i, 16) < 14:
+            val = val + url_encoding(i)
+        else:
+            val = val + chr(int(i, 16))
     return val
         
 
@@ -109,10 +144,10 @@ def rssi_value(data):
         return rssi
 
 def has_uribeacon_service(data):
-    return (data[17] == '03' and
-            data[18] == '03' and
-            data[19] == 'D8' and
-            data[20] == 'FE')
+    return (data[14] == '03' and
+            data[15] == '03' and
+            data[16] == 'D8' and
+            data[17] == 'FE')
 
  
 def holt_winters_second_order_ewma( x, span, beta ):
@@ -142,37 +177,53 @@ def calc_distance(rssi, tx_value):
         distance =  (0.89976)*math.pow(ratio,7.7095) + 0.111
         return round(distance, 2)
 
-gotOK = False
-cmd = './hcidump.sh'
-print cmd
-reader = subprocess.Popen(cmd, 
-                        shell=True,
-                        stdin=subprocess.PIPE,
-                        stdout=subprocess.PIPE,
-                        )
 
-line = '' 
-cont_line = False
-while not gotOK:
-    reply = reader.stdout.readline()
-    # print "reply: %s" % reply
-    if re.match(".*>.*", reply):
-        line = reply.rstrip()
-        cont_line = True
-    elif cont_line :
-        line = line +  reply.rstrip()
-        print 'line: ' + line
-        mydata = line.split()
-        if mydata[0] == '>':
-            del mydata[0]
-        if has_uribeacon_service(mydata):
-            print mydata[-1]
-            print 'TX power: {}'.format(tx_power(mydata))
-            print 'RSSI: {}'.format(rssi_value(mydata))
-            print 'Address: {}'.format(mac_address(mydata))
-            print 'Length: {}'.format(ad_length(mydata))
-            print 'uri: {}{}'.format(uri_scheme(mydata),
-                                     encoded_uri(mydata, ad_length(mydata)))
-            print 'distance: {}'.format(calc_distance(rssi_value(mydata),
-                                                      tx_power(mydata)))
-            
+if __name__ == '__main__':
+   gotOK = True
+   # Open a file
+   # fo = open("logging.txt", "wb")
+   cmd = './hcidump.sh'
+   print cmd
+   reader = subprocess.Popen(cmd, 
+                           shell=True,
+                           stdin=subprocess.PIPE,
+                           stdout=subprocess.PIPE,
+                           )
+
+   line = '' 
+   cont_line = False
+   try:
+      while gotOK < 50:
+          reply = reader.stdout.readline()
+          # print "reply: %s" % reply
+          if re.match(".*>.*", reply):
+              line = reply.rstrip()
+              cont_line = True
+          elif cont_line :
+              line = line +  reply.rstrip()
+              print 'line: ' + line
+              mydata = line.split()
+              if mydata[0] == '>':
+                  del mydata[0]
+              # print mydata[14]
+              if has_uribeacon_service(mydata):
+                  print mydata[-1]
+                  print 'Address: {}'.format(mac_address(mydata))
+                  print 'uri: {}{}'.format(uri_scheme(mydata),
+                                           encoded_uri(mydata, ad_length(mydata)))
+                  print 'TX power: {}'.format(tx_power(mydata))
+                  print 'RSSI: {}'.format(rssi_value(mydata))
+                  print 'distance: {}'.format(calc_distance(rssi_value(mydata),
+                                                            tx_power(mydata)))
+                  print 'Length: {}'.format(ad_length(mydata))
+                  # fo.write( '{0},'.format(rssi_value(mydata)))
+                  gotOK += 1
+          
+
+   except KeyboardInterrupt:
+      print '\nInterrupt caught'
+
+   finally:
+      # Close opend file
+      # fo.close()
+        pass
