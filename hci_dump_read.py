@@ -42,6 +42,9 @@ def mac_address(bytes):
                             bytes[10], bytes[9], bytes[8], bytes[7])
     return address
 
+def packet_len(data, loc):
+    return int(data[loc], 16)
+    
 def service(data):
     # Complete List of 16-Dit Service
     pass
@@ -51,9 +54,9 @@ def service_id(data):
     # 0xFED8
     pass
 
-def ad_length(data):
+def ad_length(data, loc):
     # Between 5 - 23
-    return int(data[18], 16)
+    return int(data[loc], 16)
 
 def service_data(data):
     # 0x16
@@ -69,15 +72,15 @@ def uri_flags(data):
     # UriBeacons Flags
     pass
 
-def tx_power(data):
+def tx_power(data, loc):
     # Reference power from beacon broadcast
-    tx_power = int(data[23], 16)
+    tx_power = int(data[loc + 5], 16)
     if tx_power & 0x80: # MSB set -> neg.
         return -((~tx_power & 0xff) + 1)
     else:
         return tx_power
 
-def uri_scheme(data):
+def uri_scheme(data, loc):
     # Get UriBeacon Uri Scheme Prefix
     # 0x00 = http://www.
     # 0x01 = https://www.
@@ -89,7 +92,7 @@ def uri_scheme(data):
                      2: 'http://',
                      3: 'https://',
                      4: 'urn:uuid:'}
-    return encode_scheme[int(data[24])]
+    return encode_scheme[int(data[loc + 6])]
 
 def url_encoding(code):
     # UriBeacon HTTP URL encoding
@@ -123,10 +126,11 @@ def url_encoding(code):
                      13: '.gov'}
     return encode_scheme[int(code)]
 
-def encoded_uri(data, length):
+def encoded_uri(data, loc, length):
+    start = loc + 7
     # Uri content
     val = ''
-    for i in data[25:(25 + length - 6)]:
+    for i in data[start:(start + length - 6)]:
         # print 'Encode: {0} - {1}'.format(i, chr(int(i, 16)))
         if int(i, 16) < 14:
             val = val + url_encoding(i)
@@ -149,6 +153,10 @@ def has_uribeacon_service(data):
             data[16] == 'D8' and
             data[17] == 'FE')
 
+def find_ad_start(data):
+    uri_service = ['03', '03', 'D8', 'FE']
+    service_loc = [(i, i+len(uri_service)) for i in range(len(data)) if data[i:i+len(uri_service)] == uri_service]
+    return service_loc
  
 def holt_winters_second_order_ewma( x, span, beta ):
     """
@@ -179,7 +187,7 @@ def calc_distance(rssi, tx_value):
 
 
 if __name__ == '__main__':
-   gotOK = True
+   gotOK = 0
    # Open a file
    # fo = open("logging.txt", "wb")
    cmd = './hcidump.sh'
@@ -206,17 +214,20 @@ if __name__ == '__main__':
               if mydata[0] == '>':
                   del mydata[0]
               # print mydata[14]
-              if has_uribeacon_service(mydata):
-                  print mydata[-1]
-                  print 'Address: {}'.format(mac_address(mydata))
-                  print 'uri: {}{}'.format(uri_scheme(mydata),
-                                           encoded_uri(mydata, ad_length(mydata)))
-                  print 'TX power: {}'.format(tx_power(mydata))
-                  print 'RSSI: {}'.format(rssi_value(mydata))
-                  print 'distance: {}'.format(calc_distance(rssi_value(mydata),
-                                                            tx_power(mydata)))
-                  print 'Length: {}'.format(ad_length(mydata))
+              
+              if len(find_ad_start(mydata)) > 0:
+                  data_start = find_ad_start(mydata)[0][1]
+                  # print mydata[-1]
+                  print '  Address: {}'.format(mac_address(mydata))
+                  print '  uri: {}{}'.format(uri_scheme(mydata, data_start),
+                                           encoded_uri(mydata, data_start, ad_length(mydata, data_start)))
+                  print '  TX power: {}'.format(tx_power(mydata, data_start))
+                  print '  RSSI: {}'.format(rssi_value(mydata))
+                  print '  distance: {}'.format(calc_distance(rssi_value(mydata),
+                                                            tx_power(mydata, data_start)))
+                  print '  Length: {}'.format(ad_length(mydata, data_start))
                   # fo.write( '{0},'.format(rssi_value(mydata)))
+                  print '\n'
                   gotOK += 1
           
 
