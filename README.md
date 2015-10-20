@@ -31,6 +31,8 @@ It seems like this is important:
 ```
 sudo apt-get install python-bluez
 ```
+There are some examples at: /usr/share/doc/bluez-test-scripts/examples
+
 # Physical Web examples
 To run the Linux example using Bluez then a newer version of awk needs to be installed. This can be done with:
 
