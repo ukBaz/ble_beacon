@@ -33,9 +33,11 @@ RSSI: A7 (deciaml -89)
 import re
 import subprocess
 import math
+import os
+
 import numpy as np
 
-        
+
 def mac_address(bytes):
     # bytes[13] ":" bytes[12] ":" bytes[11] ":" bytes[10] ":" bytes[9] ":" bytes[8]
     address = '{0}:{1}:{2}:{3}:{4}:{5}'.format(bytes[12], bytes[11],
@@ -158,83 +160,87 @@ def find_ad_start(data):
     service_loc = [(i, i+len(uri_service)) for i in range(len(data)) if data[i:i+len(uri_service)] == uri_service]
     return service_loc
  
-def holt_winters_second_order_ewma( x, span, beta ):
-    """
-    http://connor-johnson.com/2014/02/01/smoothing-with-exponentially-weighted-moving-averages/
-    """
-    N = x.size
-    alpha = 2.0 / ( 1 + span )
-    s = np.zeros(( N, ))
-    b = np.zeros(( N, ))
-    s[0] = x[0]
-    for i in range( 1, N ):
-        s[i] = alpha * x[i] + ( 1 - alpha )*( s[i-1] + b[i-1] )
-        b[i] = beta * ( s[i] - s[i-1] ) + ( 1 - beta ) * b[i-1]
-    return s
- 
-def calc_distance(rssi, tx_value):
-    # Power value. Usually ranges between -59 to -65
-    # tx_value = -69
-    if rssi == 0:
-        return -1.0
-    
-    ratio = rssi*1.0/tx_value
-    if ratio < 1.0:
-        return round(math.pow(ratio,10), 2)
-    else:
-        distance =  (0.89976)*math.pow(ratio,7.7095) + 0.111
-        return round(distance, 2)
+
+def calc_range(rssi, txpower):
+    # Alternative calculation to test, likely very similar answer!
+    # rssi1m needs to be found with testing
+    # Based on; http://matts-soup.blogspot.co.uk/2013/12/finding-distance-from-rssi.html
+
+    #  Using zero for rssi1m as currently beacons are broadcasting value a 1m via txPower
+    rssi1m = -40 #  tested
+    path_loss = 2 #  free space
+    if rssi > 0:
+        rssi = 0
+    act_power = txpower + rssi1m
+    pwr_loss = rssi - act_power
+    num = -10 * path_loss
+    den = float(pwr_loss) / float(num)
+    raw_range = math.pow(10.0, den)
+    return raw_range
+
+def process_line(complete_line):
+    mydata = complete_line.split()
+
+    if len(mydata) > 0:
+        if mydata[0] == '>':
+            del mydata[0]
+            # print mydata[14]
+
+        if len(find_ad_start(mydata)) > 0:
+            data_start = find_ad_start(mydata)[0][1]
+            # print mydata[-1]
+            print '  Address: {}'.format(mac_address(mydata))
+            print '  uri: {}{}'.format(uri_scheme(mydata, data_start),
+                                       encoded_uri(mydata, data_start, ad_length(mydata, data_start)))
+            print '  TX power: {}'.format(tx_power(mydata, data_start))
+            print '  RSSI: {}'.format(rssi_value(mydata))
+            print '  distance: {}'.format(calc_range(rssi_value(mydata),
+                                                        tx_power(mydata, data_start)))
+            print '  Length: {}'.format(ad_length(mydata, data_start))
+            # fo.write( '{0},'.format(rssi_value(mydata)))
+            print '\n'
 
 
-if __name__ == '__main__':
+def main():
    gotOK = 0
    # Open a file
    # fo = open("logging.txt", "wb")
-   cmd = './hcidump.sh'
+   file_path = os.path.dirname(os.path.realpath(__file__))
+   cmd = os.path.join(file_path, 'hcidump.sh')
    print cmd
    reader = subprocess.Popen(cmd, 
-                           shell=True,
+                           shell=False,
                            stdin=subprocess.PIPE,
                            stdout=subprocess.PIPE,
                            )
 
    line = '' 
    cont_line = False
-   try:
-      while gotOK < 50:
-          reply = reader.stdout.readline()
-          # print "reply: %s" % reply
-          if re.match(".*>.*", reply):
-              line = reply.rstrip()
-              cont_line = True
-          elif cont_line :
-              line = line +  reply.rstrip()
-              print 'line: ' + line
-              mydata = line.split()
-              if mydata[0] == '>':
-                  del mydata[0]
-              # print mydata[14]
-              
-              if len(find_ad_start(mydata)) > 0:
-                  data_start = find_ad_start(mydata)[0][1]
-                  # print mydata[-1]
-                  print '  Address: {}'.format(mac_address(mydata))
-                  print '  uri: {}{}'.format(uri_scheme(mydata, data_start),
-                                           encoded_uri(mydata, data_start, ad_length(mydata, data_start)))
-                  print '  TX power: {}'.format(tx_power(mydata, data_start))
-                  print '  RSSI: {}'.format(rssi_value(mydata))
-                  print '  distance: {}'.format(calc_distance(rssi_value(mydata),
-                                                            tx_power(mydata, data_start)))
-                  print '  Length: {}'.format(ad_length(mydata, data_start))
-                  # fo.write( '{0},'.format(rssi_value(mydata)))
-                  print '\n'
-                  gotOK += 1
-          
 
-   except KeyboardInterrupt:
-      print '\nInterrupt caught'
+   while gotOK < 50:
+       reply = reader.stdout.readline()
+       # print "reply: %s" % reply
+       if re.match("^>.*$", reply):
+           process_line(line)
+           line = reply.rstrip()
+           cont_line = True
+           # print 'start line: ' + line
+           gotOK += 1
+       elif re.match("^\s\s\w.*$", reply):
+           line = line + reply.rstrip()
+           # print 'line: ' + line
 
-   finally:
-      # Close opend file
-      # fo.close()
+
+
+
+if __name__ == '__main__':
+    try:
+        main()
+
+    except KeyboardInterrupt:
+        print '\nInterrupt caught'
+
+    finally:
+        # Close opend file
+        # fo.close()
         pass
