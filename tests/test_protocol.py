@@ -101,6 +101,22 @@ def test_alt_beacon(packet):
         assert advert.alt_beacon is None
 
 
+@pytest.mark.parametrize('packet', pkt_capture.bytes_only, ids=idfn)
+def test_repr(packet):
+    expected_tx_pwr = [-68]
+    expected_uuids = ['48253e59-7224-4463-b9b8-033ffab58104']
+    print(f'\n{packet}')
+    advert = protocols.AdvertEventHandler(packet)
+    print(advert)
+    print(advert.adv_data)
+    print(advert.manf_data)
+    print(advert.serv_data)
+    print(advert.eddystone_url)
+    print(advert.eddystone_uid)
+    print(advert.ibeacon)
+    print(advert.alt_beacon)
+    print(advert.ibeacon.__repr__())
+
 
 def test_mac_addr():
     # mac = protocols.MacAddress(b'\xe4\xa4\x71\x63\xe1\x69')

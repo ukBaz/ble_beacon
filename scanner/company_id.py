@@ -1,3 +1,20 @@
+"""
+Module for turning Bluetooth manufacturer id's into human readable
+names.
+Master list available from the Bluetooth Special Interest Group:
+https://www.bluetooth.com/specifications/assigned-numbers/company-identifiers/
+"""
+
+
+def lookup(company_id):
+    """Utility function to easily lookup names of companies from identifier"""
+    try:
+        manufacturer = company_name[company_id]
+    except IndexError:
+        manufacturer = 'No name available'
+    return manufacturer
+
+
 company_name = [
     "Ericsson Technology Licensing",
     "Nokia Mobile Phones",
