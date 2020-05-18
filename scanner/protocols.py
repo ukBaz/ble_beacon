@@ -324,4 +324,5 @@ def _format_bytearray(data):
     # when printing bytearrays, some bytes are converted to characters.
     # Some people have found this confusing so printing them in such a way
     # that they will stay hex values.
-    'bytearray([{}])'.format(', '.join(hex(data_byte) for data_byte in data))
+    return 'bytearray([{}])'.format(', '.join(f'{data_byte:#04x}'
+                                              for data_byte in data))
