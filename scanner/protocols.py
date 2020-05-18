@@ -26,8 +26,7 @@ class AdvertEventHandler:
             self.rssi = self.evt.rssi
         else:
             return
-        if self.adv_payload.adv_data is not None:
-            self.adv_data = AdvertData(self.adv_payload.adv_data)
+        self.adv_data = AdvertData(self.adv_payload.adv_data)
         if self.adv_data and self.adv_data.manufacturer_data:
             self.manf_data = ManufacturerData(self.adv_data.manufacturer_data)
             if self.manf_data.is_ibeacon:
@@ -65,12 +64,10 @@ class AdvertEvent:
         self.pkt_type = None
         self.event = None
         self.rssi = None
-        if pkt is not None:
-            self.pkt_type, self.event, self.pkt_len = struct.unpack(
-                'BBB', pkt[:3])
-            self.rssi = int.from_bytes([pkt[-1]], 'big', signed=True)
-            if self.event == EVT_LE_META_EVENT and self.pkt_len > 12:
-                self.payload = pkt[3:-1]
+        self.pkt_type, self.event, self.pkt_len = struct.unpack('BBB', pkt[:3])
+        self.rssi = int.from_bytes([pkt[-1]], 'big', signed=True)
+        if self.event == EVT_LE_META_EVENT and self.pkt_len > 12:
+            self.payload = pkt[3:-1]
 
     @property
     def is_le_meta_event(self):
@@ -206,13 +203,10 @@ class iBeacon:
         self.type = data[2]
         self.length = data[3]
         self._beacon_uuid = uuid.UUID(bytes=data[4:20])
+        self.beacon_uuid = str(self._beacon_uuid)
         self.major = int.from_bytes(data[20:22], 'big', signed=False)
         self.minor = int.from_bytes(data[22:24], 'big', signed=False)
         self.tx_pwr = int.from_bytes([data[24]], 'big', signed=True)
-
-    @property
-    def beacon_uuid(self):
-        return str(self._beacon_uuid)
 
     def __str__(self):
         return f'<iBeacon {self.beacon_uuid}, {self.major}, ' \
@@ -314,9 +308,17 @@ class EddystoneUid:
     https://github.com/google/eddystone/tree/master/eddystone-uid
     """
     def __init__(self, data):
+        self.data_in = data
         self.tx_pwr = int.from_bytes([data[0]], 'big', signed=True)
         self.namespace_id = int.from_bytes(data[1:11], 'big')
         self.instance_id = int.from_bytes(data[11:17], 'big')
+
+    def __str__(self):
+        return (f'<EddystoneUid {self.tx_pwr} {self.namespace_id} '
+                f'{self.instance_id}>')
+
+    def __repr__(self):
+        return f'<EddystoneUid({_format_bytearray(self.data_in)})>'
 
 
 def _format_bytearray(data):
