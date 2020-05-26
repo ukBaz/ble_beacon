@@ -2,8 +2,8 @@ from scanner import protocols, hci_socket
 
 
 for pkt in hci_socket.run():
+    print(f'\nraw: {pkt}')
+    print(f'packet as list: {protocols._format_bytearray(pkt)}')
     ad = protocols.AdvertEventHandler(pkt)
-    if ad.eddystone_uid:
-        print(f'Raw packet: {pkt}')
-        print(f'Clean hex values: {protocols._format_bytearray(pkt)}')
-        print(f'Processed Eddystone UID: {ad.eddystone_uid.namespace_id}')
+    if ad.adv_data:
+        print(f'\tRaw Advert payload: {ad.adv_data}')

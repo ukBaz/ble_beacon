@@ -21,17 +21,17 @@ def test_get_mac_address(packet):
     print(f'\n{packet}')
     advert = protocols.AdvertEventHandler(packet)
     assert advert.address == ':'.join([f'{q:02x}'
-                                      for q in reversed(packet[7:14])])
+                                      for q in reversed(packet[7:13])])
 
 
 @pytest.mark.parametrize('packet', pkt_capture.bytes_only, ids=idfn)
 def test_get_adv_flags(packet):
     print(f'\n{packet}')
     advert = protocols.AdvertEventHandler(packet)
-    if packet[14] == 0x02:
-        assert advert.adv_payload.adv_flags.length == packet[14]
+    if packet[14] == 0x02 and packet[15] == 0x01:
+        assert advert.advert_flags == packet[16].to_bytes(1, 'little')
     else:
-        assert advert.adv_payload.adv_flags is None
+        assert advert.advert_flags is None
 
 
 @pytest.mark.parametrize('packet', pkt_capture.bytes_only, ids=idfn)
@@ -129,29 +129,13 @@ def test_evt_hndlr_flags():
         b'\x04\x3e\x29\x02\x01\x03\x01\xbe\x43\xe7\x35\x82\xde\x1d\x02\x01\x06'
         b'\x03\x03\xaa\xfe\x15\x16\xaa\xfe\x10\xf6\x03\x75\x6b\x62\x61\x7a\x2e'
         b'\x67\x69\x74\x68\x75\x62\x2e\x69\x6f\xbd')
-    assert repr(ad.advert_flags) == ('<AdvertFlags(bytearray('
-                                     '[0x02, 0x01, 0x06])>')
+    assert ad.advert_flags == b'\x06'
 
 
 def test_ad_evt_repr():
     evt = protocols.AdvertEvent(b'\x04>\x0c\x02\x01\x04\x01\n\t9\x1b'
                                 b'\xf6y\x00\xb5')
     assert repr(evt).startswith('<AdvertEvent(bytearray([0x04, 0x3e,')
-
-
-def test_ad_payload_repr():
-    payload = protocols.AdvertPayload(b'\x02\x01\x03\x01\xbeC\xe75\x82\xde\x1d'
-                                      b'\x02\x01\x06\x03\x03\xaa\xfe\x15\x16'
-                                      b'\xaa\xfe\x10\xf6\x03ukbaz.github.io')
-    assert repr(payload).startswith('<AdvertPayload(bytearray([0x02, 0x01, 0x')
-    assert str(payload).startswith('<AdvertPayload 1d:de:82:35:e7:43:be')
-
-
-def test_ad_data_repr():
-    adv_data = protocols.AdvertData(b'\x03\x03\xaa\xfe\x15\x16\xaa\xfe\x10'
-                                    b'\xf6\x03ukbaz.github.io')
-    assert repr(adv_data).startswith('<AdvertData(bytearray([0x03, 0x03, 0xaa,')
-    assert str(adv_data).startswith('<AdvertData 0x3 0x3 >')
 
 
 def test_manuf_data_alt():
@@ -226,10 +210,11 @@ def test_mac_addr_repr():
 
 
 def test_advert_flags():
-    flags = protocols.AdvertFlags(b'\x02\x01\x06')
-    assert flags.length == 2
-    assert flags.type == 1
-    assert flags.data == 6
+    flags = protocols.AdvertData(b'\x03\x02\x01\x06')
+    # assert flags.length == 2
+    # assert flags.type == 1
+    expected_flag = 6
+    assert flags.adv_flags == expected_flag.to_bytes(1, 'little')
 
 
 def test_eddystone_url():
