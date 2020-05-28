@@ -39,9 +39,9 @@ def test_serv_data(packet):
     print(f'\n{packet}')
     advert = protocols.AdvertEventHandler(packet)
     if b'\x03\x03' in packet:
-        assert advert.serv_data is not None
+        assert advert.service_data is not None
     else:
-        assert advert.serv_data is None
+        assert advert.service_data is None
 
 
 @pytest.mark.parametrize('packet', pkt_capture.bytes_only, ids=idfn)
@@ -49,9 +49,9 @@ def test_manf_data(packet):
     print(f'\n{packet}')
     advert = protocols.AdvertEventHandler(packet)
     if b'\xff\x4c\x00\x02' in packet or b'\xff\xff\xff\xbe\xac' in packet:
-        assert advert.manf_data is not None
+        assert advert.manufacturer_data is not None
     else:
-        assert advert.manf_data is None
+        assert advert.manufacturer_data is None
 
 
 @pytest.mark.parametrize('packet', pkt_capture.bytes_only, ids=idfn)

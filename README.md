@@ -1,67 +1,90 @@
-# ble_beacon
-## STEM workshop reading bluetooth beacons
+# BLE Beacon Scanner
+## STEM workshop reading Bluetooth beacons
 ### Overview of aims
-Bluetooth Smart (BLE) beacons are getting good press coverage with the likes of Apple's iBeacon, Gimbal and Google support of uriBeacon (Physical Web) so it would be good to take this technology and show that it is accessable to students and the maker community.
+Bluetooth Low Engergy (BLE) beacons are becoming more well known with the likes
+of Apple's iBeacon and Google's Eddystone (Physical Web).
 
-This is a work-in-progress project that is exploring at how to make this technology accessable to schools for STEM projects.
-The assumption is that the workshop will leverage the Raspberry Pi hardware for doing coding involved in the workshop. Some assumptions being made at this time are:
-* The RPi's will be the scanners
-* The RPi's will be static
-* The beacons will move
-* The beacons will be based on an open standard
-* All hardware will be commercially available (or could be substituded for commercially available hardware)
-* The workshop code will allow for it to be easily extentable so students could do 'real' projects based on it (i.e. [go4SET](http://www.ukesf.org/working-with-schools/go4set-project)
-* Use a language familiar to schools. This seems to be python although javascript (node.js) may be an option.
+The aim is to take this technology and show that it is accessible to students
+and the maker community. By showing it is accessible, the hope is that people then
+take some of the ideas and use them for positive and creative endeavours.
 
-## Install bluetooth software on Raspberry Pi
-### Older documentation seems to suggest:
-There seems to be many different tutorials that seem to suggest many different packages need to be installed.
+The hope is that this library/project will evolve as lessons are learnt about
+how to make this technology accessible to the target audience.
+
+The target audience is someone that has some basic understanding and
+experience of programming with Python, but may not have done anything with
+Bluetooth. They are unlikely to have experience with bytes, little-endian etc.
+
+To assist with the accessibility goal, hardware will be targeted that is likely
+to be available (and understood) by schools, code club etc.
+
+Some assumptions being made at this time about the hardware:
+* The Raspberry Pi's (RPi) will do the scanning for beacons
+* The RPi's will be mains powered and so need to be static
+* The beacons will be battery powered and could move if required.
+* The beacons will be based on standards that are documented publicly
+
+To allow for ease of adoption:
+* Require minimal steps to install and run first example
+* The workshop code will allow for it to be extendable so students
+ could explore their own projects ideas based on what they have learnt
+* Use a language familiar to schools. (This seems to be Python).
+
+## Quickstart
+### Install Bluetooth software on Raspberry Pi
+Best practice would be to have setup instructions that don't include the use of
+`sudo`, however a decision has been taken to prioritize convenience rather than
+security. In the full documentation other options should be discussed.
+
+To install the library directly from GitHub:
 ```
-sudo apt-get install bluetooth bluez-utils blueman bluez-hcidump
+sudo pip install git+https://github.com/ukBaz/ble_beacon
 ```
-### New document seems to suggest:
+
+### Scanning for beacons
+This example will print the URL being broadcast by an Eddystone-URL beacon
+
+```python
+from scanner import protocols, hci_socket
+
+for pkt in hci_socket.run():
+    ad = protocols.AdvertEventHandler(pkt)
+    if ad.eddystone_url:
+        print(f'\tEddystone-URL: {ad.eddystone_url.url} @ {ad.rssi}dB')
+``` 
+
+If you save the above as `find_url_beacon.py` then to run it would be:
 ```
-sudo apt-get install bluez python-gobject python-dbus
+sudo python find_url beacon.py
 ```
-and maybe:
+An example expected output would be:
 ```
-sudo apt-get install bluez-utils
+$ sudo python3 examples/beacon_finder.py 
+        Eddystone-URL: https://microbit.org/ @ -39dB
+        Eddystone-URL: https://microbit.org/ @ -48dB
 ```
-It seems like this is important:
-```
-sudo apt-get install python-bluez
-```
-There are some examples at: /usr/share/doc/bluez-test-scripts/examples
 
-# Physical Web examples
-To run the Linux example using Bluez then a newer version of awk needs to be installed. This can be done with:
+## Creating a beacon
+### Using your phone
 
-```
-sudo apt-get install gawk
-```
-# Useful references:
+For testing, you can use an Android or iOS device to simulate a beacon.
 
-[ubuntu documentation](https://help.ubuntu.com/community/BluetoothSetup)
+Android:
+- https://play.google.com/store/apps/details?id=net.alea.beaconsimulator
+- https://play.google.com/store/apps/details?id=com.davidgyoungtech.beaconscanner
 
-BlueZ 5 [API](http://www.bluez.org/bluez-5-api-introduction-and-porting-guide/)
+iOS:
+- ??
 
-### Python Examples of BlueZ
-[BlueZ/test](https://github.com/aguedes/bluez/tree/master/test)
+### Using a BBC micro:bit
 
-### This looks useful:
+One of the easier ways to create a beacon is using Makecode on the BBC micro:bit.
 
-### Open Beacon Specs:
-[AltBeacon Protocol Specification v1.0](https://github.com/AltBeacon/spec)
+![Image of microbit code](docs/source/images/microbit_url_beacon.png)
 
-[UriBeacon Specification](https://github.com/google/uribeacon/tree/master/specification)
+The code inside the `forever` loop is just to give visual feedback that
+there is something running on the device.
 
-### Articles
-[Beacon tracking with Node.js and Raspberry Pi](https://medium.com/@eklimcz/beacon-tracking-with-node-js-and-raspberry-pi-794afa880318)
-
-[iBeacon Raspberry Pi Scanner in Python](http://www.switchdoc.com/2014/08/ibeacon-raspberry-pi-scanner-python/)
-
-[iBeacons™ aren’t the only Fruit!](http://devblog.blackberry.com/2014/09/ibeacons-not-the-only-fruit/)
-
-[Beacon introduction](http://www.slideshare.net/Dusan_Writer/ibeacon-and-bluetooth-le-an-introduction)
-
-[Coffee with a Googler: Chat with Scott Jenson about the Physical Web](https://www.youtube.com/watch?v=w8zkLGwzP_4)
+You will also need to swap the `Radio` blocks for the `Bluetooth` blocks
+which can be done by clicking on th cog in the top-right corner (not shown)
+and selecting `Extensions` -> `Bluetooth`

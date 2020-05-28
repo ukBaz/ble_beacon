@@ -11,6 +11,7 @@ https://www.bluetooth.com/specifications/assigned-numbers/16-bit-uuids-for-membe
 
 
 def lookup_16bit(uuid):
+    """Look up company name for a given 16-bit Service UUID"""
     return sixteen_bit.get(uuid, 'Unknown')
 
 

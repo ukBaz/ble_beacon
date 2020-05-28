@@ -11,7 +11,7 @@ from setuptools import setup
 required_packages = ['pydbus']
 extras_rel = ['bumpversion', 'twine']
 extras_doc = ['sphinx', 'sphinx_rtd_theme']
-extras_test = ['pytest', 'coverage', 'pycodestyle']
+extras_test = ['pytest', 'coverage', 'pylint']
 extras_dev = extras_rel + extras_doc + extras_test
 
 setup(
