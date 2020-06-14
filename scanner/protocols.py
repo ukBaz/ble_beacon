@@ -377,12 +377,15 @@ class AltBeacon:
         self.manufacturer = lookup(self.mfg_id)
         """String value of manufacturer of beacon"""
         self._beacon_uuid = uuid.UUID(bytes=data[4:20])
-        self.tx_pwr = int.from_bytes([data[-2]], 'big', signed=True)
+        self.major = int.from_bytes(data[20:22], 'big', signed=False)
+        """The major value of AltBeacon"""
+        self.minor = int.from_bytes(data[22:24], 'big', signed=False)
+        """The minor value of AltBeacon"""
+        self.tx_pwr = int.from_bytes([data[24]], 'big', signed=True)
         """
         The power the iBeacon is transmitting at. Can be used with rssi to
         estimate distance beacon is away
         """
-        self.mfg_reserved = data[-1]
 
     @property
     def beacon_uuid(self):
